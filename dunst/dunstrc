@@ -1,0 +1,59 @@
+[global]
+    # Monitor settings
+    monitor = 1
+    follow = none
+
+    # dimensions
+    width = (300, 500)
+    height = (0, 300)
+
+    # Position
+    origin = top-right
+    offset = (10,10)
+
+    # Click Behaviour
+    mouse_left_click=do_action, remove_current
+    mouse_right_click=close_current
+    mouse_middle_click=close_all
+
+    # Appearance
+    separator_height = 10 # will be ignored since gap_size is set
+    padding = 8
+    frame_width = 2
+    gap_size = 4
+    corner_radius = 10
+
+    font = "FiraCode Nerd Font" 12
+    line_height = 4
+
+    vertical_alignment = center
+
+    stack_duplicates = false
+
+    scale = 0 # doesn't work on wayland
+
+    enable_posix_regex = true
+
+    notification_limit = 5
+
+# --- Colors & theme (modern dark with accent, transparent for Wayland) ---
+# Format #AARRGGBB - AA = alpha (dd ≈ 87%, ff = opaque)
+[urgency_low]
+    background = "#dd2e3440"
+    foreground = "#ffd8dee9"
+    frame_color = "#ee4c566a"
+    highlight = "#ff88c0d0"
+
+[urgency_normal]
+    background = "#dd2e3440"
+    foreground = "#ffeceff4"
+    frame_color = "#ee5e81ac"
+    highlight = "#ff88c0d0"
+
+[urgency_critical]
+    background = "#dd2e3440"
+    foreground = "#ffeceff4"
+    frame_color = "#eebf616a"
+    highlight = "#ffbf616a"
+
+    
