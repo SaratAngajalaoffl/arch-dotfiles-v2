@@ -32,20 +32,18 @@
 
     // Modules Left
     "modules-left": [
-        "wlr/taskbar",
-        "hyprland/window"
+        "hyprland/workspaces"
     ],
 
     // Modules Center
     "modules-center": [
-        "hyprland/workspaces"
+        "clock"
     ],
 
     // Modules Right    
     "modules-right": [
         "wireplumber",
         "tray",
-        "clock",
         "custom/lock",
         "custom/shutdown",
         "custom/reboot",
