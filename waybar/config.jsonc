@@ -32,20 +32,21 @@
 
     // Modules Left
     "modules-left": [
-        "hyprland/workspaces"
+        "hyprland/workspaces",
+        "clock"
     ],
 
     // Modules Center
     "modules-center": [
-        "clock"
     ],
 
     // Modules Right    
     "modules-right": [
+        "custom/playback",
         "wireplumber",
         "tray",
         "custom/lock",
-        "custom/shutdown",
         "custom/reboot",
+        "custom/shutdown"
     ],
 }
