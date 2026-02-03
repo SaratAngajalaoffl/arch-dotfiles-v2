@@ -32,9 +32,16 @@ source "$ZSH_CONFIG_DIR/conf/aliases.zsh"
 # Preferred editor for local and remote sessions
 export EDITOR='nvim'
 
+source "$ZSH_CONFIG_DIR/conf/shell_start.zsh"
+
 # NVM Configuration
 export NVM_DIR="$HOME/.nvm"
 [ -s "/usr/share/nvm/init-nvm.sh" ] && \. "/usr/share/nvm/init-nvm.sh" # Load nvm
 [ -s "/usr/share/nvm/bash_completion" ] && \. "/usr/share/nvm/bash_completion" # Load completion
 
-source "$ZSH_CONFIG_DIR/conf/shell_start.zsh"
+# PyEnv Configuration
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init - zsh)"
+
+eval "$(zoxide init zsh)"
