@@ -34,7 +34,7 @@
 
 * {
   selected-active-foreground:  @background;
-  lightfg:                     @text;
+  lightfg:                     @red;
   separatorcolor:              @background;
   urgent-foreground:           @red;
   alternate-urgent-background: @lightbg;
