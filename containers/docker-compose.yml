@@ -24,6 +24,8 @@ services:
       - "11901:8080"
     environment:
       - TZ=UTC
+    networks:
+      - app_net
 
   mongo:
     image: mongo:latest
@@ -37,6 +39,8 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=sandbox_password
     volumes:
       - sandbox_mongo_data:/data/db
+    networks:
+      - app_net
 
   clickhouse:
     image: clickhouse/clickhouse-server:latest
@@ -50,12 +54,65 @@ services:
       - CLICKHOUSE_PASSWORD=sandbox_password
     volumes:
       - sandbox_clickhouse_data:/var/lib/clickhouse
+    networks:
+      - app_net
+
+  # DNS server for *.loki.lan resolution
+  dnsmasq:
+    image: jpillora/dnsmasq:latest
+    container_name: dnsmasq
+    restart: unless-stopped
+    ports:
+      - "11904:53/udp"
+      - "11905:8080"  # Web UI
+    environment:
+      - TZ=UTC
+    volumes:
+      - ./conf/dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.100
+    cap_add:
+      - NET_ADMIN
+
+  # WireGuard VPN server
+  wireguard:
+    image: linuxserver/wireguard:latest
+    container_name: wireguard
+    restart: unless-stopped
+    ports:
+      - "51820:51820/udp"  # WireGuard port
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - SERVERURL=106.51.158.155  # Change to your public IP or domain if you have one
+      - SERVERPORT=51820
+      - PEERS=5  # Number of client configs to generate
+      - PEERDNS=172.20.0.100  # Points to dnsmasq container
+      - INTERNAL_SUBNET=10.13.13.0
+      - ALLOWEDIPS=10.13.13.0/24,192.168.1.0/24  # Route all traffic through VPN (change to 10.13.13.0/24,192.168.1.0/24 for split tunnel)
+    volumes:
+      - wireguard_config:/config
+      - /lib/modules:/lib/modules:ro
+    networks:
+      - app_net
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
 
 networks:
   app_net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
 
 volumes:
   portainer_data:
   sandbox_mongo_data:
   sandbox_clickhouse_data:
+  wireguard_config:

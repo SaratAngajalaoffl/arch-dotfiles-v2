@@ -1,0 +1,6 @@
+[Unit]
+Description=Update wallpaper
+
+[Service]
+Type=oneshot
+ExecStart=/home/mugiwara/.config/scripts/reloads/reload_wallpaper.sh
