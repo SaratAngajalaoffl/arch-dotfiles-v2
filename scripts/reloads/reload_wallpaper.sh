@@ -2,7 +2,7 @@
 #
 ~/dotfiles/scripts/select_wallpaper.sh
 
-notify-send "Cron" "Updated wallpaper successfully!"
+notify-send "System" "Updated wallpaper successfully!"
 
 killall hyprpaper
-hyprctl dispatch exec hyprpaper
+hyprpaper &
