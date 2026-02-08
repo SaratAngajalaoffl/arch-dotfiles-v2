@@ -1,6 +1,9 @@
 # Local containers: use host ports 11000-11999 to avoid clashes with
 # common services (postgres, redis, mysql, node, etc.)
 # Nginx is the HTTPS entrypoint on 80/443; proxy to apps via shared network.
+
+name: system-services
+
 services:
   portainer:
     image: portainer/portainer-ce:latest
@@ -57,62 +60,99 @@ services:
     networks:
       - app_net
 
-  # DNS server for *.loki.lan resolution
-  dnsmasq:
-    image: jpillora/dnsmasq:latest
-    container_name: dnsmasq
+  # UI dashboard
+  dashboard:
+    image: netbirdio/dashboard:latest
+    container_name: netbird-dashboard
     restart: unless-stopped
+    networks: [netbird]
     ports:
-      - "11904:53/udp"
-      - "11905:8080"  # Web UI
-    environment:
-      - TZ=UTC
-    volumes:
-      - ./conf/dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf
-    networks:
-      app_net:
-        ipv4_address: 172.20.0.100
-    cap_add:
-      - NET_ADMIN
+      - '127.0.0.1:8080:80'
+    env_file:
+      - ./netbird/dashboard.env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "2"
 
-  # WireGuard VPN server
-  wireguard:
-    image: linuxserver/wireguard:latest
-    container_name: wireguard
+  # Signal
+  signal:
+    image: netbirdio/signal:latest
+    container_name: netbird-signal
     restart: unless-stopped
+    networks: [netbird]
     ports:
-      - "51820:51820/udp"  # WireGuard port
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=UTC
-      - SERVERURL=106.51.158.155  # Change to your public IP or domain if you have one
-      - SERVERPORT=51820
-      - PEERS=5  # Number of client configs to generate
-      - PEERDNS=172.20.0.100  # Points to dnsmasq container
-      - INTERNAL_SUBNET=10.13.13.0
-      - ALLOWEDIPS=10.13.13.0/24,192.168.1.0/24  # Route all traffic through VPN (change to 10.13.13.0/24,192.168.1.0/24 for split tunnel)
+      - '127.0.0.1:8083:80'
+      - '127.0.0.1:10000:10000'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "2"
+
+  # Relay (includes embedded STUN server)
+  relay:
+    image: netbirdio/relay:latest
+    container_name: netbird-relay
+    restart: unless-stopped
+    networks: [netbird]
+    ports:
+      - '127.0.0.1:8084:80'
+      - '3478:3478/udp'
+    env_file:
+      - ./netbird/relay.env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "2"
+
+  # Management (includes embedded IdP)
+  management:
+    image: netbirdio/management:latest
+    container_name: netbird-management
+    restart: unless-stopped
+    networks: [netbird]
+    ports:
+      - '127.0.0.1:8081:80'
     volumes:
-      - wireguard_config:/config
-      - /lib/modules:/lib/modules:ro
-    networks:
-      - app_net
+      - netbird_management:/var/lib/netbird
+      - ./netbird/management.json:/etc/netbird/management.json
+    command: [
+      "--port", "80",
+      "--log-file", "console",
+      "--log-level", "info",
+      "--disable-anonymous-metrics=false",
+      "--single-account-mode-domain=netbird.selfhosted",
+      "--dns-domain=netbird.selfhosted",
+      "--idp-sign-key-refresh-enabled",
+    ]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "2"
+
+  routing:
+    image: netbirdio/netbird:latest
+    container_name: netbird-routing
+    restart: unless-stopped
+    networks: [app_net]
     cap_add:
       - NET_ADMIN
-      - SYS_MODULE
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
+    env_file:
+      - ./netbird/routing.env
+    volumes:
+      - netbird_client:/var/lib/netbird
 
 networks:
   app_net:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
-          gateway: 172.20.0.1
+  netbird:
 
 volumes:
   portainer_data:
   sandbox_mongo_data:
   sandbox_clickhouse_data:
-  wireguard_config:
+  netbird_management:
+  netbird_client:
