@@ -146,6 +146,25 @@ services:
     volumes:
       - netbird_client:/var/lib/netbird
 
+  nextcloud:
+    image: nextcloud:latest
+    container_name: nextcloud
+    restart: unless-stopped
+    ports:
+      - "11904:80"
+    env_file:
+      - ./nextcloud/nextcloud.env
+    volumes:
+      - nextcloud_data:/var/www/html
+      - nextcloud_storage:/var/www/html/data
+    networks:
+      - app_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "2"
+
 networks:
   app_net:
   netbird:
@@ -156,3 +175,5 @@ volumes:
   sandbox_clickhouse_data:
   netbird_management:
   netbird_client:
+  nextcloud_data:      
+  nextcloud_storage:   
