@@ -61,7 +61,7 @@ fi
 
 # Build JSON (jq for safe escaping; fallback to manual)
 if command -v jq &>/dev/null; then
-  jq -n \
+  jq -n -c \
     --arg text "${text:-}" \
     --arg alt "${alt:-stopped}" \
     --arg class "${class:-stopped}" \

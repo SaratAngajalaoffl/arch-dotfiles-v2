@@ -28,7 +28,7 @@
         "on-click": "pavucontrol"
     },
     "custom/playback": {
-        "exec-if": "playerctl status 2>/dev/null",
+        "exec-if": "~/.config/waybar/scripts/should_show_playback.sh",
         "exec": "~/.config/waybar/scripts/current_playback.sh",
         "return-type": "json",
         "interval": 1,
