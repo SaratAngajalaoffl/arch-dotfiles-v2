@@ -9,7 +9,6 @@
 ########################
 ### COMMAND ALIASES ###
 ########################
-alias cat=bat
 alias ls=lsd
 alias cd=z
 
@@ -31,4 +30,11 @@ alias edit-alias="vim ~/dotfiles/zsh/conf/aliases.zsh -c \"cd ~/dotfiles\""
 # port forwarding
 alias pf-imdi-clickhouse="kubectl --kubeconfig ~/files/anera/infra/kubeconfig.yaml port-forward svc/clickhouse 8125:8123 -n prod-intelligence-markets-data-ingestion"
 alias pf-imdi-mongo="kubectl --kubeconfig ~/files/anera/infra/kubeconfig.yaml port-forward svc/mongodb-headless 27019:27017 -n prod-intelligence-markets-data-ingestion"
+alias pf-iai-clickhouse="kubectl port-forward svc/clickhouse-clickhouse 8125:8123 -n indices-ai"
+alias pf-iai-mongo="kubectl port-forward svc/mongodb 27019:27017 -n indices-ai"
 # --------------------------------------------------------------------------
+#
+# --------------------------------------------------------------------------
+# port forwarding
+alias iai-up="docker compose -f ./deploy/docker-compose.dev.yml up --build -d"
+alias iai-down="docker compose -f ./deploy/docker-compose.dev.yml down"
