@@ -18,49 +18,11 @@ services:
       - TZ=UTC
     networks:
       - app_net
+
+  ###############################################
+  #####      NETBIRD CONTAINERS     #############
+  ###############################################
   
-  pdf-edit:
-    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf
-    container_name: pdf-edit
-    restart: unless-stopped
-    ports:
-      - "11901:8080"
-    environment:
-      - TZ=UTC
-    networks:
-      - app_net
-
-  mongo:
-    image: mongo:latest
-    container_name: mongo-sandbox
-    restart: unless-stopped
-    ports:
-      - "11902:27017"
-    environment:
-      - TZ=UTC
-      - MONGO_INITDB_ROOT_USERNAME=sandbox_user
-      - MONGO_INITDB_ROOT_PASSWORD=sandbox_password
-    volumes:
-      - sandbox_mongo_data:/data/db
-    networks:
-      - app_net
-
-  clickhouse:
-    image: clickhouse/clickhouse-server:latest
-    container_name: clickhouse-sandbox
-    restart: unless-stopped
-    ports:
-      - "11903:8123"
-    environment:
-      - TZ=UTC
-      - CLICKHOUSE_USER=sandbox_user
-      - CLICKHOUSE_PASSWORD=sandbox_password
-    volumes:
-      - sandbox_clickhouse_data:/var/lib/clickhouse
-    networks:
-      - app_net
-
-  # UI dashboard
   dashboard:
     image: netbirdio/dashboard:latest
     container_name: netbird-dashboard
@@ -146,6 +108,10 @@ services:
     volumes:
       - netbird_client:/var/lib/netbird
 
+  ###############################################
+  ########      NEXT CLOUD      #################
+  ###############################################
+
   nextcloud:
     image: nextcloud:latest
     container_name: nextcloud
@@ -165,6 +131,71 @@ services:
         max-size: "500m"
         max-file: "2"
 
+  ###############################################
+  ########      IMMICH      #####################
+  ###############################################
+
+  immich-server:
+    container_name: immich_server
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    # extends:
+    #   file: hwaccel.transcoding.yml
+    #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
+    volumes:
+      # Do not edit the next line. If you want to change the media storage location on your system, edit the value of UPLOAD_LOCATION in the .env file
+      - immich_image_storage:/data
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - ./immich/immich.env
+    ports:
+      - '2283:2283'
+    depends_on:
+      - redis
+      - database
+    restart: always
+    healthcheck:
+      disable: false
+
+  immich-machine-learning:
+    container_name: immich_machine_learning
+    # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
+    # Example tag: ${IMMICH_VERSION:-release}-cuda
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+    # extends: # uncomment this section for hardware acceleration - see https://docs.immich.app/features/ml-hardware-acceleration
+    #   file: hwaccel.ml.yml
+    #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference - use the `-wsl` version for WSL2 where applicable
+    volumes:
+      - model-cache:/cache
+    env_file:
+      - ./immich/immich.env
+    restart: always
+    healthcheck:
+      disable: false
+
+  redis:
+    container_name: immich_redis
+    image: docker.io/valkey/valkey:9@sha256:546304417feac0874c3dd576e0952c6bb8f06bb4093ea0c9ca303c73cf458f63
+    healthcheck:
+      test: redis-cli ping || exit 1
+    restart: always
+
+  database:
+    container_name: immich_postgres
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    env_file:
+      - ./immich/immich.env
+    environment:
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+      # Uncomment the DB_STORAGE_TYPE: 'HDD' var if your database isn't stored on SSDs
+      # DB_STORAGE_TYPE: 'HDD'
+    volumes:
+      # Do not edit the next line. If you want to change the database storage location on your system, edit the value of DB_DATA_LOCATION in the .env file
+      - immich_database_storage:/var/lib/postgresql/data
+    shm_size: 128mb
+    restart: always
+    healthcheck:
+      disable: false
+
 networks:
   app_net:
   netbird:
@@ -177,3 +208,6 @@ volumes:
   netbird_client:
   nextcloud_data:      
   nextcloud_storage:   
+  immich_image_storage:
+  immich_database_storage:
+  model-cache:
