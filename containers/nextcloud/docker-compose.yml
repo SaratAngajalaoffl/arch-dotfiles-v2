@@ -1,0 +1,26 @@
+name: nextcloud-stack
+
+services:
+  nextcloud:
+    image: nextcloud:latest
+    container_name: nextcloud
+    restart: unless-stopped
+    ports:
+      - "11904:80"
+    env_file:
+      - ./nextcloud.env
+    volumes:
+      - ${HOME}/storage/homelab/nextcloud/app:/var/www/html
+      - ${HOME}/storage/homelab/nextcloud/data:/var/www/html/data
+    networks:
+      - nextcloud_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "2"
+
+networks:
+  nextcloud_net:
+    driver: bridge
+
