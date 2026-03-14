@@ -1,0 +1,17 @@
+name: watchtower-stack
+
+services:
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=UTC
+    command:
+      - --cleanup
+      - --include-restarting
+      - --rolling-restart
+      - --schedule
+      - "0 0 * * * *"

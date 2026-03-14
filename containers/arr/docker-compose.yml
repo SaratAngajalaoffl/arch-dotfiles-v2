@@ -1,0 +1,139 @@
+name: arr-stack
+
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    env_file:
+      - ./arr.env
+    # Expose web UIs of apps that share this network namespace
+    ports:
+      - 8888:8888/tcp # HTTP proxy
+      - 8388:8388/tcp # Shadowsocks
+      - 8388:8388/udp # Shadowsocks
+      # Sonarr
+      - "8989:8989"
+      # Radarr
+      - "7878:7878"
+      # Lidarr
+      - "8686:8686"
+      # Bazarr
+      - "6767:6767"
+      # Prowlarr
+      - "9696:9696"
+      # HomeArr
+      - "7575:7575"
+      # NZBGet
+      - "6789:6789"
+      # qBittorrent Web UI
+      - "48299:8080"
+      # qBittorrent inbound torrent traffic
+      - "6881:6881"
+      - "6881:6881/udp"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${HOME}/storage/homelab/gluetun:/gluetun
+    networks:
+      - arr_net
+    
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
+    volumes:
+      - ${HOME}/storage/homelab/qbittorrent/config:/config
+      - ${HOME}/storage/data/torrents:/data/torrents
+
+  nzbget:
+    image: lscr.io/linuxserver/nzbget:latest
+    container_name: nzbget
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ${HOME}/storage/homelab/nzbget/config:/config
+      - ${HOME}/storage/data/usenet:/data/usenet #optional
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - ${HOME}/storage/homelab/sonarr/config:/config
+      - ${HOME}/storage/data:/data
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - ${HOME}/storage/homelab/radarr/config:/config
+      - ${HOME}/storage/data:/data
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - ${HOME}/storage/homelab/prowlarr/config:/config
+
+  homearr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    container_name: homearr
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+    environment:
+      - TZ=UTC
+    env_file:
+      - ./arr.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${HOME}/storage/homelab/homearr/config:/config
+      - ${HOME}/storage/homelab/homearr/appdata:/appdata
+  
+
+networks:
+  arr_net:
+    driver: bridge
