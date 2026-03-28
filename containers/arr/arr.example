@@ -1,10 +1,19 @@
 VPN_SERVICE_PROVIDER=protonvpn
 VPN_TYPE=wireguard
 
-WIREGUARD_PRIVATE_KEY=
+# From [Interface]
+WIREGUARD_PRIVATE_KEY=<user-supplied>
 
+# From [Peer]
+WIREGUARD_PUBLIC_KEY=<user-supplied>
+WIREGUARD_ADDRESSES=<user-supplied>
+
+# Endpoint
+VPN_ENDPOINT_IP=149.50.211.169
+
+# NAT-PMP port forwarding (you had this enabled in ProtonVPN)
 VPN_PORT_FORWARDING=on
+VPN_PORT_FORWARDING_PROVIDER=protonvpn
 
-SERVER_COUNTRIES=Singapore
-
-SECRET_ENCRYPTION_KEY=
+# Optional but recommended
+TZ=Asia/Kolkata

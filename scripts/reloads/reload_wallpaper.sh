@@ -5,4 +5,4 @@
 notify-send "System" "Updated wallpaper successfully!"
 
 killall hyprpaper
-hyprpaper &
+hyprpaper
